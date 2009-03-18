@@ -16,7 +16,7 @@ class Question(models.Model):
 
 class Tree(models.Model):
     trigger = models.CharField(max_length=30, help_text="The incoming message which triggers this Tree")
-    root_question = models.ForeignKey(Question, related_name="first_question", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
+    root_question = models.ForeignKey(Question, related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
     
     def __unicode__(self):
         return "T%s: %s -> %s" % (
@@ -26,8 +26,8 @@ class Tree(models.Model):
 
 
 class Answer(models.Model):
-    previous_question = models.ForeignKey(Question, related_name="previous_question", help_text="The Question which this Answer is an option to")
-    next_question     = models.ForeignKey(Question, blank=True, null=True, related_name="next_question", help_text="The (optional) Question to proceed to when this Answer is chosen")
+    previous_question = models.ForeignKey(Question, related_name="answers", help_text="The Question which this Answer is an option to")
+    next_question     = models.ForeignKey(Question, blank=True, null=True, related_name="next_question_set", help_text="The (optional) Question to proceed to when this Answer is chosen")
     trigger           = models.CharField(max_length=30, help_text="The incoming message which triggers this Answer")
     response          = models.TextField(blank=True, help_text="The message which is sent in response to this Answer, before the next question is sent")
     
