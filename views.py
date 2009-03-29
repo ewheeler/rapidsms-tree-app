@@ -9,12 +9,7 @@ from django.shortcuts import render_to_response
 from apps.tree.models import *
 
 
-def alpha(req):
-	return render_to_response("alpha.html", { },
+def index(req):
+	return render_to_response("index.html",
+	    { "trees": Tree.objects.all(), "t": Tree.objects.all()[0] },
 	    context_instance=RequestContext(req))
-
-def beta(req):
-	return HttpResponse("BETA")
-
-def gamma(req):
-	return HttpResponse("GAMMA")

@@ -8,6 +8,9 @@ class App(rapidsms.app.App):
     def start(self):
         self.callers = {}
     
+    def configure(self, last_message="There are no more questions.", **kwargs):
+        self.last_message = last_message
+    
     def handle(self, msg):
         
         # if this caller doesn't have a "question" attribute,
@@ -22,7 +25,6 @@ class App(rapidsms.app.App):
             # message is probably for another app
             except Tree.DoesNotExist:
                 return False
-        
         
         # the caller is part-way though a question
         # tree, so check their answer and respond
@@ -53,7 +55,6 @@ class App(rapidsms.app.App):
             self.callers[msg.caller] = answer.next_question\
                 if answer.next_question else None
         
-        
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
         if self.callers[msg.caller]:
@@ -64,7 +65,7 @@ class App(rapidsms.app.App):
         # state from this caller. they'll have to send
         # another Tree trigger to start again
         else:
-            msg.respond("There are no more questions.")
+            msg.respond(self.last_message)
             delete(self.callers[msg.caller])
         
         
