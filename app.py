@@ -40,7 +40,7 @@ class App(rapidsms.app.App):
             except Answer.DoesNotExist:
                 answers = Answer.objects.filter(previous_question=q)
                 flat_answers = ", ".join([ans.trigger for ans in answers])
-                msg.respond('"%s" is not a valid answer. Pick one of: %s ' % (msg.text, flat_answers))
+                msg.respond('"%s" is not a valid answer. Pick one of: %s' % (msg.text, flat_answers))
                 return True
             
             # if this answer has a response, send it back to the user
@@ -50,24 +50,26 @@ class App(rapidsms.app.App):
             if answer.response:
                 msg.respond(answer.response)
             
-            # advance to the next question, or stop if there
-            # are no more. wow, python syntax is really ugly!
-            self.callers[msg.caller] = answer.next_question\
-                if answer.next_question else None
+            # advance to the next question, or remove
+            # this caller's state if there are no more
+            if answer.next_question:
+                self.callers[msg.caller] =\
+                    answer.next_question
+                
+            else:
+                del self.callers[msg.caller]
+                
+                # sent the LAST_MESSAGE to end the conversation,
+                # unless the last question triggered a response
+                if not answer.response:
+                    msg.respond(self.last_message)
         
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
-        if self.callers[msg.caller]:
+        if msg.caller in self.callers:
             q = self.callers[msg.caller]
             msg.respond(q.text)
-        
-        # there are no more questions, so remove all
-        # state from this caller. they'll have to send
-        # another Tree trigger to start again
-        else:
-            msg.respond(self.last_message)
-            delete(self.callers[msg.caller])
-        
+            self.info(q.text)
         
         # if we haven't returned long before now, we're
         # long committed to dealing with this message
