@@ -11,6 +11,7 @@ from apps.tree.models import *
 
 def index(req):
 	allTrees = Tree.objects.all()
+	t = Tree()
 	if len(allTrees) != 0:
 		t = allTrees[0]
 	return render_to_response("tree/index.html",
