@@ -16,9 +16,9 @@ class App(rapidsms.app.App):
         # if this caller doesn't have a "question" attribute,
         # they're not currently answering a question tree, so
         # just search for triggers and return
-        if not msg.connection in self.connections:
+        if not msg.connection.identity in self.connections:
             try:
-                self.connections[msg.connection] =\
+                self.connections[msg.connection.identity] =\
                     Tree.objects.get(trigger=msg.text).root_question
             
             # no trigger found? no big deal. the
@@ -30,7 +30,7 @@ class App(rapidsms.app.App):
         # tree, so check their answer and respond
         else:
             try:
-                q = self.connections[msg.connection]
+                q = self.connections[msg.connection.identity]
                 answer = Answer.objects.get(
                     previous_question=q,
                     trigger=msg.text)
@@ -53,11 +53,11 @@ class App(rapidsms.app.App):
             # advance to the next question, or remove
             # this caller's state if there are no more
             if answer.next_question:
-                self.connections[msg.connection] =\
+                self.connections[msg.connection.identity] =\
                     answer.next_question
                 
             else:
-                del self.connections[msg.connection]
+                del self.connections[msg.connection.identity]
                 
                 # sent the LAST_MESSAGE to end the conversation,
                 # unless the last question triggered a response
@@ -66,8 +66,8 @@ class App(rapidsms.app.App):
         
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
-        if msg.connection in self.connections:
-            q = self.connections[msg.connection]
+        if msg.connection.identity in self.connections:
+            q = self.connections[msg.connection.identity]
             msg.respond(q.text)
             self.info(q.text)
         

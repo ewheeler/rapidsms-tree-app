@@ -15,7 +15,7 @@
 		</thead>
 		<tbody>{% if trees %}{% for tree in trees %}
 			<tr>
-				<td>{{ tree.trigger }}</td>
+                <th scope="row">{{ tree.trigger }}</th>
 				<td>{{ tree.root_question.text }}</td>
 			</tr>{% endfor %}{% else %}
 			<tr class="no-data">
@@ -39,9 +39,10 @@
 	</table>
 </div>
 
-<!--<div class="module dt">
+<div class="module dt">
 	<h2>Edit a Decision Tree</h2>
-</div>-->
+	{% render_question t.root_question %}
+</div>
 
 <!--<div class="module">
 	<h2>Add a Decision Tree</h2>
