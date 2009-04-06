@@ -41,7 +41,7 @@
 
 <div class="module dt">
 	<h2>Edit a Decision Tree</h2>
-	{% render_question t.root_question %}
+	{% if t %}{% render_question t.root_question %}{% endif %}
 </div>
 
 <!--<div class="module">
