@@ -39,9 +39,16 @@ class App(rapidsms.app.App):
             # the user of the valid options.
             except Answer.DoesNotExist:
                 answers = Answer.objects.filter(previous_question=q)
-                flat_answers = ", ".join([ans.trigger for ans in answers])
-                msg.respond('"%s" is not a valid answer. Pick one of: %s' % (msg.text, flat_answers))
-                return True
+                # there are no defined answers.  therefore there are no more questions to ask 
+                if len(answers) == 0:
+                    msg.respond("You're done with this survey.  Thanks for participating!")
+                    # remove the connection so the caller can start a new session
+                    self.connections.pop(msg.connection.identity)
+                    return
+                else:
+                    flat_answers = ", ".join([ans.trigger for ans in answers])
+                    msg.respond('"%s" is not a valid answer. Pick one of: %s' % (msg.text, flat_answers))
+                    return True
             
             # if this answer has a response, send it back to the user
             # before doing anything else. this means that they might
