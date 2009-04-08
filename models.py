@@ -27,8 +27,8 @@ class Tree(models.Model):
 
 class Answer(models.Model):
     previous_question = models.ForeignKey(Question, related_name="answers", help_text="The Question which this Answer is an option to")
+    trigger           = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
     next_question     = models.ForeignKey(Question, blank=True, null=True, related_name="next_question_set", help_text="The (optional) Question to proceed to when this Answer is chosen")
-    trigger           = models.CharField(max_length=30, help_text="The incoming message which triggers this Answer")
     response          = models.TextField(blank=True, help_text="The message which is sent in response to this Answer, before the next question is sent")
     
     def __unicode__(self):
