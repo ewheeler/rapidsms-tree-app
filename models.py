@@ -4,6 +4,20 @@
 
 from django.db import models
 
+# user stuff.  should probably be in a different app
+class Person(models.Model):
+    name = models.CharField(max_length=100, blank=True, null=True)
+    phone = models.CharField(max_length=100, blank=True, null=True)
+    
+    def __unicode__(self):
+        return "%s (%s)" % (self.phone, self.name)
+
+
+class Registration(models.Model):
+    '''Registration allows the system to initiate trees, rather than user prompts'''
+    person = models.ForeignKey(Person)
+    tree = models.ForeignKey('Tree')
+    
 
 class Question(models.Model):
     text = models.TextField()
@@ -16,27 +30,100 @@ class Question(models.Model):
 
 class Tree(models.Model):
     trigger = models.CharField(max_length=30, help_text="The incoming message which triggers this Tree")
-    root_question = models.ForeignKey(Question, related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
+    #root_question = models.ForeignKey("Question", related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
+    # making this compatible with the UI
+    root_state = models.ForeignKey("TreeState", null=True, blank=True, related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
     
     def __unicode__(self):
         return "T%s: %s -> %s" % (
             self.pk,
             self.trigger,
-            self.root_question)
+            self.root_state)
 
 
 class Answer(models.Model):
     previous_question = models.ForeignKey(Question, related_name="answers", help_text="The Question which this Answer is an option to")
-    trigger           = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
+    trigger = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
     next_question     = models.ForeignKey(Question, blank=True, null=True, related_name="next_question_set", help_text="The (optional) Question to proceed to when this Answer is chosen")
     response          = models.TextField(blank=True, help_text="The message which is sent in response to this Answer, before the next question is sent")
     
     def __unicode__(self):
         return ("Q%s -> %s" % (
-            self.previous_question.pk,
-            self.trigger) +\
+            self.question.pk,
+            self.answer))
             
             # if this question has a "next question", which the
             # user is forwarded to after answering, append it
-            (" -> Q%s" % (self.next_question.pk)\
-                if self.next_question else ""))
+            #(" -> Q%s" % (self.next_question.pk)\
+            #    if self.next_question else ""))
+        
+
+class TreeState(models.Model):
+    #tree = models.ForeignKey(Tree)
+    name = models.CharField(max_length=100)
+    question = models.ForeignKey(Question, blank=True, null=True)
+    
+    def __unicode__(self):
+        return ("State %s, Question: %s" % (
+            self.name,
+            self.question))
+    
+class Transition(models.Model):
+    current_state = models.ForeignKey(TreeState)
+    # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
+    answer = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
+    next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
+    
+    def __unicode__(self):
+        return ("%s : %s --> %s" % 
+            (self.current_state,
+             self.answer,
+             self.next_state))
+ 
+class Session(models.Model):
+    person = models.ForeignKey(Person)
+    tree = models.ForeignKey(Tree)
+    start_date = models.DateTimeField(auto_now_add=True)
+    state = models.ForeignKey(TreeState, blank=True, null=True) # none if the session is complete
+     
+    def __unicode__(self):
+        if self.state:
+            text = self.state
+        else:
+            text = "completed"
+        return ("%s : %s" % (self.person, text))
+
+class Entry(models.Model):
+    session = models.ForeignKey(Session)
+    sequence_id = models.IntegerField()
+    transition = models.ForeignKey(Transition)
+    time = models.DateTimeField(auto_now_add=True)
+    text = models.CharField(max_length=160)
+    
+    def __unicode__(self):
+        return "%s %s %s" % (self.session, self.sequence_id, self.text)
+    
+    def meta_data(self):
+        return "%s - %s %s" % (
+            self.session.person.phone,
+            self.time.strftime("%a %b %e"),
+            self.time.strftime("%I:%M %p"))
+    
+    def display_text(self):
+        # assume that the display text is just the text,
+        # since this is what it is for free text entries
+        return self.text
+        
+    class Meta:
+        verbose_name_plural="Entries"
+
+'''class Message(models.Model):
+    connection = models.CharField(max_length=100, blank=True, null=True)
+    time = models.DateTimeField(auto_now_add=True)
+    text = models.CharField(max_length=160)
+    is_outgoing = models.BooleanField()
+
+    def __unicode__(self):
+        return self.text
+
+'''
