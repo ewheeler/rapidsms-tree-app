@@ -6,7 +6,13 @@ from django.conf.urls.defaults import *
 import apps.tree.views as views
 
 urlpatterns = patterns('',
-    url(r'^tree$', views.index),
+    (r'^tree$', views.index),
+    
+    (r'^tree/data$', views.data),
+    (r'^tree/data/(?P<id>\d+)$', views.data),
+    
+    (r'^tree/data/export$', views.export),
+    (r'^tree/data/export/(?P<id>\d+)$', views.export),
     
     # serve the static files for this TREE app
     # TODO: this should be automatic, via WEBUI

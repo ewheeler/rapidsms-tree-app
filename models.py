@@ -101,7 +101,7 @@ class Entry(models.Model):
     text = models.CharField(max_length=160)
     
     def __unicode__(self):
-        return "%s %s %s" % (self.session, self.sequence_id, self.text)
+        return "%s-%s: %s - %s" % (self.session.id, self.sequence_id, self.transition.current_state.question, self.text)
     
     def meta_data(self):
         return "%s - %s %s" % (
@@ -113,7 +113,8 @@ class Entry(models.Model):
         # assume that the display text is just the text,
         # since this is what it is for free text entries
         return self.text
-        
+    
+    
     class Meta:
         verbose_name_plural="Entries"
 

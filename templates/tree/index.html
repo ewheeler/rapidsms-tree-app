@@ -11,12 +11,14 @@
 			<tr>
 				<th scope="col">Trigger</th>
 				<th scope="col">First Question</th>
+				<th scope="col"></th>
 			</tr>
 		</thead>
 		<tbody>{% if trees %}{% for tree in trees %}
 			<tr>
                 <th scope="row">{{ tree.trigger }}</th>
 				<td>{{ tree.root_state.question}}</td>
+				<td><a href="tree/data/{{tree.id}}">view data</a></td>
 			</tr>{% endfor %}{% else %}
 			<tr class="no-data">
 				<td colspan="2">
