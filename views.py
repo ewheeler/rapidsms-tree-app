@@ -10,6 +10,14 @@ from apps.tree.models import *
 
 
 def index(req):
-	return render_to_response("tree/index.html",
-	    { "trees": Tree.objects.all() },
-	    context_instance=RequestContext(req))
+    allTrees = Tree.objects.all()
+    a = None
+    a.help()
+    if len(allTrees) != 0:
+		t = allTrees[0]
+		return render_to_response("tree/index.html",
+		    { "trees": allTrees, "t": t },
+		    context_instance=RequestContext(req))
+    else:
+		return render_to_response("tree/index.html",
+		    context_instance=RequestContext(req))

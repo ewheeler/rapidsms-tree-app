@@ -6,7 +6,7 @@ from models import *
 
 class App(rapidsms.app.App):
     def start(self):
-        self.callers = {}
+        self.connections = {}
     
     def configure(self, last_message="There are no more questions.", **kwargs):
         self.last_message = last_message
@@ -16,9 +16,9 @@ class App(rapidsms.app.App):
         # if this caller doesn't have a "question" attribute,
         # they're not currently answering a question tree, so
         # just search for triggers and return
-        if not msg.caller in self.callers:
+        if not msg.connection.identity in self.connections:
             try:
-                self.callers[msg.caller] =\
+                self.connections[msg.connection.identity] =\
                     Tree.objects.get(trigger=msg.text).root_question
             
             # no trigger found? no big deal. the
@@ -30,7 +30,7 @@ class App(rapidsms.app.App):
         # tree, so check their answer and respond
         else:
             try:
-                q = self.callers[msg.caller]
+                q = self.connections[msg.connection.identity]
                 answer = Answer.objects.get(
                     previous_question=q,
                     trigger=msg.text)
@@ -39,9 +39,16 @@ class App(rapidsms.app.App):
             # the user of the valid options.
             except Answer.DoesNotExist:
                 answers = Answer.objects.filter(previous_question=q)
-                flat_answers = ", ".join([ans.trigger for ans in answers])
-                msg.respond('"%s" is not a valid answer. Pick one of: %s' % (msg.text, flat_answers))
-                return True
+                # there are no defined answers.  therefore there are no more questions to ask 
+                if len(answers) == 0:
+                    msg.respond("You're done with this survey.  Thanks for participating!")
+                    # remove the connection so the caller can start a new session
+                    self.connections.pop(msg.connection.identity)
+                    return
+                else:
+                    flat_answers = ", ".join([ans.trigger for ans in answers])
+                    msg.respond('"%s" is not a valid answer. Pick one of: %s' % (msg.text, flat_answers))
+                    return True
             
             # if this answer has a response, send it back to the user
             # before doing anything else. this means that they might
@@ -53,11 +60,11 @@ class App(rapidsms.app.App):
             # advance to the next question, or remove
             # this caller's state if there are no more
             if answer.next_question:
-                self.callers[msg.caller] =\
+                self.connections[msg.connection.identity] =\
                     answer.next_question
                 
             else:
-                del self.callers[msg.caller]
+                del self.connections[msg.connection.identity]
                 
                 # sent the LAST_MESSAGE to end the conversation,
                 # unless the last question triggered a response
@@ -66,8 +73,8 @@ class App(rapidsms.app.App):
         
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
-        if msg.caller in self.callers:
-            q = self.callers[msg.caller]
+        if msg.connection.identity in self.connections:
+            q = self.connections[msg.connection.identity]
             msg.respond(q.text)
             self.info(q.text)
         
