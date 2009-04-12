@@ -87,7 +87,7 @@ def export(req, id = None):
             states_w_transitions = {}
             for transition in transitions:
                 states_w_transitions[transition.current_state] = transition
-            print states_w_transitions
+            #print states_w_transitions
             for state in all_states:
                 if states_w_transitions.has_key(state):
                     values.append(states_w_transitions[state].answer)
