@@ -3,6 +3,7 @@
 
 
 from django.db import models
+import re
 
 # user stuff.  should probably be in a different app
 class Person(models.Model):
@@ -69,11 +70,35 @@ class TreeState(models.Model):
             self.question))
     
 class Transition(models.Model):
+    TRANSITION_TYPES = (
+        ('A', 'Answer (exact)'),
+        ('R', 'Regular Expression'),
+        ('C', 'Custom logic'),
+    )
     current_state = models.ForeignKey(TreeState)
     # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
-    answer = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
+    type = models.CharField(max_length=1, choices=TRANSITION_TYPES)
+    answer = models.TextField("Answer")
+    description = models.CharField(max_length=50, null=True)
     next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
     
+    def helper_text(self):
+        if self.type == "A":
+            if self.description:
+                return "%s (%s)" % (self.answer, self.description)
+            return self.answer
+        if self.type == "R":
+            if self.description:
+                return self.description
+            # this will be ugly
+            return self.answer
+        if self.type == "C":
+            if self.description:
+                return self.description
+            # this might be ugly
+            return self.answer
+    
+
     def __unicode__(self):
         return ("%s : %s --> %s" % 
             (self.current_state,
