@@ -5,9 +5,9 @@
 {% load tree %}
 
 <div class="module">
+	{% if t %}
+	<h2>All Data for Tree: {{ t.trigger }}</h2>
 	<table>
-		{% if t %}
-		<caption>All Data for Tree: {{ t.trigger }}</caption>
 		{% if sessions and not loops %}
 		<thead>
 			<tr>
@@ -94,8 +94,8 @@
 			{% endif %}
 		</tfoot>
 		{% endif %}
-		{% endif %}
 	</table>
+	{% endif %}
 </div>
 
 <div class="module dt">
