@@ -45,7 +45,32 @@
 					padding: 0.5em;
 				}
 			
-			.dt tr.answers > td {
+			/* adding state and transitions, which are currently just a copy of questions and answers */
+			.dt tr.state > td {
+                background: url("../images/vertical-link.png") repeat-y 50% 100%;
+                padding: 1em 0;
+            }
+            
+                .dt tr.state > td > div {
+                    max-width: 12em; }
+                
+            .dt tr.transitions > td {
+                padding-top: 2em;
+                background: url("../images/answer-link.png") no-repeat 50% 0;
+            }
+            
+                .dt tr.transitions > td > div {
+                    font-style: italic;
+                    background: #ffd;
+                }
+            
+            .dt tr.transitions > td:first-child {
+                background: url("../images/answer-link-left.png") no-repeat 50% 0; }
+            
+            .dt tr.transitions > td:last-child {
+                background: url("../images/answer-link-right.png") no-repeat 50% 0; }
+            
+            .dt tr.transitions > td {
 				padding-top: 2em;
 				background: url("../images/answer-link.png") no-repeat 50% 0;
 			}
