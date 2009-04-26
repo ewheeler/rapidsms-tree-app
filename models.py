@@ -3,22 +3,9 @@
 
 
 from django.db import models
+from apps.reporters.models import Reporter, PersistantConnection
 import re
 
-# user stuff.  should probably be in a different app
-class Person(models.Model):
-    name = models.CharField(max_length=100, blank=True, null=True)
-    phone = models.CharField(max_length=100, blank=True, null=True)
-    
-    def __unicode__(self):
-        return "%s (%s)" % (self.phone, self.name)
-
-
-class Registration(models.Model):
-    '''Registration allows the system to initiate trees, rather than user prompts'''
-    person = models.ForeignKey(Person)
-    tree = models.ForeignKey('Tree')
-    
 
 class Question(models.Model):
     text = models.TextField()
@@ -76,9 +63,9 @@ class Transition(models.Model):
         ('C', 'Custom logic'),
     )
     current_state = models.ForeignKey(TreeState)
-    # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
     type = models.CharField(max_length=1, choices=TRANSITION_TYPES)
-    answer = models.TextField("Answer")
+    # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
+    answer = models.CharField(max_length=160)
     description = models.CharField(max_length=50, null=True)
     next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
     
@@ -106,7 +93,8 @@ class Transition(models.Model):
              self.next_state))
  
 class Session(models.Model):
-    person = models.ForeignKey(Person)
+    # We might want to make these reporters
+    connection = models.ForeignKey(PersistantConnection)
     tree = models.ForeignKey(Tree)
     start_date = models.DateTimeField(auto_now_add=True)
     state = models.ForeignKey(TreeState, blank=True, null=True) # none if the session is complete
@@ -116,7 +104,7 @@ class Session(models.Model):
             text = self.state
         else:
             text = "completed"
-        return ("%s : %s" % (self.person, text))
+        return ("%s : %s" % (self.connection.identity, text))
 
 class Entry(models.Model):
     session = models.ForeignKey(Session)

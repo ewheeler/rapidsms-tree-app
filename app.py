@@ -3,6 +3,7 @@
 
 import rapidsms
 from models import *
+from apps.reporters.models import Reporter
 
 class App(rapidsms.app.App):
     
@@ -15,25 +16,15 @@ class App(rapidsms.app.App):
         self.last_message = last_message
     
     def handle(self, msg):
-        # first check if the caller is registered.  if not, register them.  this is very 
-        # similar to the polls app
-        try:
-            person = Person.objects.all().get(phone=msg.connection.identity)
-        except Person.DoesNotExist:
-            person = Person(phone=msg.connection.identity, name="unknown")
-            person.save()
-            self.debug("Person %s saved" % person)
-
-        
         # if this caller doesn't have a "question" attribute,
         # they're not currently answering a question tree, so
         # just search for triggers and return
-        sessions = Session.objects.all().filter(state__isnull=False).filter(person=person)
+        sessions = Session.objects.all().filter(state__isnull=False).filter(connection=msg.persistant_connection)
         if not sessions:
             try:
                 tree = Tree.objects.get(trigger=msg.text)
                 # start a new session for this person and save it
-                session = Session(person=person, tree=tree, state=tree.root_state)
+                session = Session(connection=msg.persistant_connection, tree=tree, state=tree.root_state)
                 session.save()
                 self.debug("session %s saved" % session)
                 #self.connections[msg.connection.identity] = tree.root_state
@@ -116,7 +107,7 @@ class App(rapidsms.app.App):
         
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
-        sessions = Session.objects.all().filter(state__isnull=False).filter(person=person)
+        sessions = Session.objects.all().filter(state__isnull=False).filter(connection=msg.persistant_connection)
         if sessions:
             state = sessions[0].state
             if state.question:
