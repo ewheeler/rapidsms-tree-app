@@ -1,11 +1,16 @@
 from rapidsms.tests.scripted import TestScript
 from app import App
+import apps.reporters.app as reporters_app
 from models import *
 
 
     
 class TestApp (TestScript):
-    apps = (App,)
+    apps = (App, reporters_app.App)
+    # the test_backend script does the loading of the dummy backend that allows reporters
+    # to work properly in tests
+    fixtures = ['test_backend']
+    
 
     
     def setUp(self):
