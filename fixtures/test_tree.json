@@ -1,6 +1,48 @@
 [
   {
     "pk": 1, 
+    "model": "tree.language", 
+    "fields": {
+      "code": "en", 
+      "name": "English"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "tree.language", 
+    "fields": {
+      "code": "sp", 
+      "name": "Spanish"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "tree.language", 
+    "fields": {
+      "code": "fr", 
+      "name": "French"
+    }
+  }, 
+  {
+    "pk": 1, 
+    "model": "tree.translation", 
+    "fields": {
+      "translation": "ola", 
+      "original": "hello", 
+      "language": 2
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "tree.translation", 
+    "fields": {
+      "translation": "bon jour", 
+      "original": "hello", 
+      "language": 3
+    }
+  }, 
+  {
+    "pk": 1, 
     "model": "tree.question", 
     "fields": {
       "text": "hello"

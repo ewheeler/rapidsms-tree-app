@@ -11,3 +11,6 @@ admin.site.register(TreeState)
 admin.site.register(Transition)
 admin.site.register(Entry)
 admin.site.register(Session)
+
+admin.site.register(Language)
+admin.site.register(Translation)

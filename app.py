@@ -4,6 +4,8 @@
 import rapidsms
 from models import *
 from apps.reporters.models import Reporter
+from i18n import get_translation as _
+from i18n import get_language 
 
 class App(rapidsms.app.App):
     
@@ -111,8 +113,8 @@ class App(rapidsms.app.App):
         if sessions:
             state = sessions[0].state
             if state.question:
-                msg.respond(state.question.text)
-                self.info(state.question.text)
+                msg.respond(_(state.question.text, get_language(sessions[0].connection)))
+                self.info(_(state.question.text, get_language(sessions[0].connection)))
         
         # if we haven't returned long before now, we're
         # long committed to dealing with this message
