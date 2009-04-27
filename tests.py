@@ -9,37 +9,7 @@ class TestApp (TestScript):
     apps = (App, reporters_app.App)
     # the test_backend script does the loading of the dummy backend that allows reporters
     # to work properly in tests
-    fixtures = ['test_backend']
-    
-
-    
-    def setUp(self):
-        TestScript.setUp(self)
-        if not self.isSetup():
-            question_strings = ["hello", "Please enter your 4-digit PIN", "Thanks for entering."]
-            questions = []
-            for question_text in question_strings:
-                question = Question(text=question_text)
-                question.save()
-                questions.append(question)
-            state_names = ["test_root" , "test_pin" , "pin_success" ]
-            state_map = { state_names[0]: questions[0], state_names[1] : questions[1], state_names[2] : questions[2]}
-            states = []
-            for name in state_names:
-                state = TreeState(name=name, question=state_map[name])
-                state.save()
-                states.append(state)
-            trees = { "test" : states[0], "pin" : states[1]}
-            for trigger, state in trees.items():
-                tree = Tree(trigger=trigger, root_state=state)
-                tree.save()
-            transition = Transition(current_state=states[1], next_state=states[2], type="R", answer=r"^(\d{4})$", description="a 4-digit decimal number")
-            transition.save()
-            
-            
-
-    def isSetup(self):
-        return len(Tree.objects.all()) > 0
+    fixtures = ['test_backend', 'test_tree']
     
     testTrigger = """
            8005551212 > test

@@ -113,7 +113,7 @@ def export(req, id = None):
                 else:
                     values.append("")
             w.writerow(values)
-            # rewind the virtual file
+        # rewind the virtual file
         output.seek(0)
         response = HttpResponse(output.read(),
                             mimetype='application/ms-excel')

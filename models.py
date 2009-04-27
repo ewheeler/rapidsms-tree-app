@@ -30,44 +30,20 @@ class Tree(models.Model):
 
 
 class Answer(models.Model):
-    previous_question = models.ForeignKey(Question, related_name="answers", help_text="The Question which this Answer is an option to")
-    trigger = models.CharField("Answer", max_length=30, help_text="The incoming message which triggers this Answer")
-    next_question     = models.ForeignKey(Question, blank=True, null=True, related_name="next_question_set", help_text="The (optional) Question to proceed to when this Answer is chosen")
-    response          = models.TextField(blank=True, help_text="The message which is sent in response to this Answer, before the next question is sent")
-    
-    def __unicode__(self):
-        return ("Q%s -> %s" % (
-            self.question.pk,
-            self.answer))
-            
-            # if this question has a "next question", which the
-            # user is forwarded to after answering, append it
-            #(" -> Q%s" % (self.next_question.pk)\
-            #    if self.next_question else ""))
-        
-
-class TreeState(models.Model):
-    #tree = models.ForeignKey(Tree)
-    name = models.CharField(max_length=100)
-    question = models.ForeignKey(Question, blank=True, null=True)
-    
-    def __unicode__(self):
-        return ("State %s, Question: %s" % (
-            self.name,
-            self.question))
-    
-class Transition(models.Model):
-    TRANSITION_TYPES = (
+    ANSWER_TYPES = (
         ('A', 'Answer (exact)'),
         ('R', 'Regular Expression'),
         ('C', 'Custom logic'),
     )
-    current_state = models.ForeignKey(TreeState)
-    type = models.CharField(max_length=1, choices=TRANSITION_TYPES)
+    name = models.CharField(max_length=30)
+    type = models.CharField(max_length=1, choices=ANSWER_TYPES)
     # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
     answer = models.CharField(max_length=160)
-    description = models.CharField(max_length=50, null=True)
-    next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
+    description = models.CharField(max_length=100, null=True)
+    
+    def __unicode__(self):
+        return self.name
+        #return "%s %s (%s)" % (self.helper_text(), self.type)
     
     def helper_text(self):
         if self.type == "A":
@@ -85,7 +61,24 @@ class Transition(models.Model):
             # this might be ugly
             return self.answer
     
+    
 
+class TreeState(models.Model):
+    #tree = models.ForeignKey(Tree)
+    name = models.CharField(max_length=100)
+    question = models.ForeignKey(Question, blank=True, null=True)
+    
+    def __unicode__(self):
+        return ("State %s, Question: %s" % (
+            self.name,
+            self.question))
+    
+class Transition(models.Model):
+    current_state = models.ForeignKey(TreeState)
+    answer = models.ForeignKey(Answer)
+    next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
+    
+    
     def __unicode__(self):
         return ("%s : %s --> %s" % 
             (self.current_state,

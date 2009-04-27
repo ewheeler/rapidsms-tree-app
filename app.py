@@ -47,7 +47,7 @@ class App(rapidsms.app.App):
             transitions = Transition.objects.filter(current_state=state)
             found_transition = None
             for transition in transitions:
-                if self.matches(transition, msg.text):
+                if self.matches(transition.answer, msg.text):
                     found_transition = transition
                     break
                         
@@ -64,7 +64,7 @@ class App(rapidsms.app.App):
                     # self.connections.pop(msg.connection.identity)
                     return
                 else:
-                    flat_answers = " or ".join([trans.helper_text() for trans in transitions])
+                    flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
                     msg.respond('"%s" is not a valid answer. You must enter %s' % (msg.text, flat_answers))
                     return True
             
@@ -122,19 +122,19 @@ class App(rapidsms.app.App):
         self.info("Registering keyword: %s for function %s, %s" %(name, function.im_class, function.im_func.func_name))
         self.registered_functions
         
-    def matches(self, transition, answer):
+    def matches(self, answer, answer_value):
         '''returns True if the answer is a match for this.'''
-        if not answer:
+        if not answer_value:
             return False
-        if transition.type == "A":
-            return answer.lower() == transition.answer.lower()
-        elif transition.type == "R":
-            return re.match(transition.answer, answer)
-        elif transition.type == "C":
-            if self.registered_functions.has_key(transition.answer):
-                return self.registered_functions[transition.answer](answer)
+        if answer.type == "A":
+            return answer_value.lower() == answer.answer.lower()
+        elif answer.type == "R":
+            return re.match(answer.answer, answer_value)
+        elif answer.type == "C":
+            if self.registered_functions.has_key(answer.answer):
+                return self.registered_functions[answer.answer](answer_value)
             else:
-                raise Exception("Can't find a function to match custom key: %s", transition.answer)
-        raise Exception("Don't know how to process answer type: %s", transition.type)
+                raise Exception("Can't find a function to match custom key: %s", answer)
+        raise Exception("Don't know how to process answer type: %s", answer.type)
         
         
