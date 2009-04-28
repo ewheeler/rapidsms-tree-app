@@ -11,7 +11,13 @@ class App(rapidsms.app.App):
     
     registered_functions = {}
     
+    def __init__(self, title, router):
+        super(App, self).__init__(title, router) 
+        self.name = "tree"
+        
+        
     def start(self):
+        
         pass
     
     def configure(self, last_message="There are no more questions.", **kwargs):
@@ -98,15 +104,12 @@ class App(rapidsms.app.App):
             session.state = found_transition.next_state
             session.save()
             self.debug("session %s saved" % session)
-                #self.connections[msg.connection.identity] =\
-                #        transition.next_state
+            # if this was the last message 
+            # check if the tree has a defined completion text 
+            # and if so send it
+            if not session.state and session.tree.completion_text:
+                msg.respond(session.tree.completion_text)
                 
-               
-                # sent the LAST_MESSAGE to end the conversation,
-                # unless the last question triggered a response
-                #if not answer.response:
-                #    msg.respond(self.last_message)
-        
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
         sessions = Session.objects.all().filter(state__isnull=False).filter(connection=msg.persistant_connection)
@@ -121,8 +124,8 @@ class App(rapidsms.app.App):
         return True
 
     def register_custom_transition(self, name, function):
-        self.info("Registering keyword: %s for function %s, %s" %(name, function.im_class, function.im_func.func_name))
-        self.registered_functions
+        self.info("Registering keyword: %s for function %s" %(name, function.func_name))
+        self.registered_functions[name] = function  
         
     def matches(self, answer, answer_value):
         '''returns True if the answer is a match for this.'''

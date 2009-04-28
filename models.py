@@ -42,7 +42,8 @@ class Tree(models.Model):
     #root_question = models.ForeignKey("Question", related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
     # making this compatible with the UI
     root_state = models.ForeignKey("TreeState", null=True, blank=True, related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
-    
+    completion_text = models.CharField(max_length=160, null=True, blank=True, help_text="The message that will be sent when the tree is completed")
+     
     def __unicode__(self):
         return "T%s: %s -> %s" % (
             self.pk,
