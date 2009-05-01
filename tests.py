@@ -3,7 +3,6 @@ from app import App
 import apps.reporters.app as reporters_app
 from models import *
 from apps.reporters.models import Reporter, PersistantConnection, PersistantBackend
-
     
 class TestApp (TestScript):
     apps = (App, reporters_app.App)
