@@ -1,6 +1,8 @@
 from rapidsms.tests.scripted import TestScript
 from app import App
 import apps.reporters.app as reporters_app
+import apps.i18n.app as i18n_app
+
 from models import *
 from apps.reporters.models import Reporter, PersistantConnection, PersistantBackend
     

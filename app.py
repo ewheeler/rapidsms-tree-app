@@ -4,8 +4,8 @@
 import rapidsms
 from models import *
 from apps.reporters.models import Reporter
-from i18n import get_translation as _
-from i18n import get_language 
+from apps.i18n.utils import get_translation as _
+from apps.i18n.utils import get_language 
 
 class App(rapidsms.app.App):
     
@@ -55,7 +55,7 @@ class App(rapidsms.app.App):
             transitions = Transition.objects.filter(current_state=state)
             found_transition = None
             for transition in transitions:
-                if self.matches(transition.answer, msg.text):
+                if self.matches(transition.answer, msg):
                     found_transition = transition
                     break
                         
@@ -108,7 +108,7 @@ class App(rapidsms.app.App):
             # check if the tree has a defined completion text 
             # and if so send it
             if not session.state and session.tree.completion_text:
-                msg.respond(session.tree.completion_text)
+                msg.respond(_(session.tree.completion_text, get_language(session.connection)))
                 
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
@@ -127,7 +127,8 @@ class App(rapidsms.app.App):
         self.info("Registering keyword: %s for function %s" %(name, function.func_name))
         self.registered_functions[name] = function  
         
-    def matches(self, answer, answer_value):
+    def matches(self, answer, message):
+        answer_value = message.text
         '''returns True if the answer is a match for this.'''
         if not answer_value:
             return False
@@ -137,7 +138,7 @@ class App(rapidsms.app.App):
             return re.match(answer.answer, answer_value)
         elif answer.type == "C":
             if self.registered_functions.has_key(answer.answer):
-                return self.registered_functions[answer.answer](answer_value)
+                return self.registered_functions[answer.answer](message)
             else:
                 raise Exception("Can't find a function to match custom key: %s", answer)
         raise Exception("Don't know how to process answer type: %s", answer.type)

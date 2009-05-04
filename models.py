@@ -7,26 +7,6 @@ from apps.reporters.models import Reporter, PersistantConnection
 import re
 
 
-# some really bare bones models for localization
-# TODO this should be moved to its own app or something 
-class Language(models.Model):
-    code = models.CharField(max_length = 10) # e.g. "en"
-    name = models.CharField(max_length = 50) # e.g. "English"
-
-    def __unicode__(self):
-        return "%s (%s)" % (self.name, self.code)
-
-class Translation(models.Model):
-    language = models.ForeignKey(Language)
-    
-    # The actual original (probably english) string will be 
-    # used as the key into the other languages.  This is 
-    # similar to the python/django _() i18n support.  
-    original = models.TextField()
-    translation = models.TextField()
-
-    def __unicode__(self):
-        return "%s --> %s (%s)" % (self.original, self.translation, self.language.name)
 
 class Question(models.Model):
     text = models.TextField()
@@ -59,7 +39,6 @@ class Answer(models.Model):
     )
     name = models.CharField(max_length=30)
     type = models.CharField(max_length=1, choices=ANSWER_TYPES)
-    # I'm not sure if it's easier or harder to make this an Answer or just a CharField.  Leaving as a charfield for now.
     answer = models.CharField(max_length=160)
     description = models.CharField(max_length=100, null=True)
     
