@@ -11,11 +11,11 @@ class App(rapidsms.app.App):
     
     registered_functions = {}
     
-    def __init__(self, title, router):
-        super(App, self).__init__(title, router) 
-        self.name = "tree"
-        
-        
+#    def __init__(self, title, router):
+#        super(App, self).__init__(title, router) 
+#        self.name = "tree"
+#        
+
     def start(self):
         
         pass
