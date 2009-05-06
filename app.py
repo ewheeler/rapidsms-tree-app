@@ -32,7 +32,7 @@ class App(rapidsms.app.App):
             try:
                 tree = Tree.objects.get(trigger=msg.text)
                 # start a new session for this person and save it
-                session = Session(connection=msg.persistant_connection, tree=tree, state=tree.root_state)
+                session = Session(connection=msg.persistant_connection, tree=tree, state=tree.root_state, num_tries=0)
                 session.save()
                 self.debug("session %s saved" % session)
                 #self.connections[msg.connection.identity] = tree.root_state
@@ -47,6 +47,7 @@ class App(rapidsms.app.App):
         else:
             session = sessions[0]
             state = session.state
+            
             self.debug(state)
             # this becomes a bit more complicated now.  loop through all transitions
             # starting with this state and try each one depending on the type
@@ -58,22 +59,41 @@ class App(rapidsms.app.App):
                 if self.matches(transition.answer, msg):
                     found_transition = transition
                     break
-                        
+            
+            # the number of tries they have to get out of this state
+            # if empty there is no limit.  When the num_retries is hit
+            # a user's session will be terminated.
+    
             # not a valid answer, so remind
             # the user of the valid options.
             if not found_transition:
                 transitions = Transition.objects.filter(current_state=state)
                 # there are no defined answers.  therefore there are no more questions to ask 
                 if len(transitions) == 0:
+                    # send back some precanned response
                     msg.respond("You are done with this survey.  Thanks for participating!")
                     # remove the connection so the caller can start a new session
-                    session.state  = None
+                    session.state = None
                     session.save()
                     # self.connections.pop(msg.connection.identity)
                     return
                 else:
+                    # send them some hints about how to respond
                     flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
+                    self.debug("flat answers")
                     msg.respond('"%s" is not a valid answer. You must enter %s' % (msg.text, flat_answers))
+                    
+                    # update the number of times the user has tried
+                    # to answer this.  If they have reached the 
+                    # maximum allowed then end their session and
+                    # send them an error message.
+                    session.num_tries = session.num_tries + 1
+                    if state.num_retries and session.num_tries >= state.num_retries:
+                        session.state = None
+                        msg.respond(_("Sorry, invalid answer %(retries)s times. Your session will now end. Please try again later.",
+                                      get_language(session.connection)) % {"retries": session.num_tries })
+                        
+                    session.save()
                     return True
             
             # if this answer has a response, send it back to the user
@@ -102,6 +122,7 @@ class App(rapidsms.app.App):
             # this caller's state if there are no more
             # this might be "None" but that's ok, it will be the equivalent of ending the session
             session.state = found_transition.next_state
+            session.num_tries = 0
             session.save()
             self.debug("session %s saved" % session)
             # if this was the last message 

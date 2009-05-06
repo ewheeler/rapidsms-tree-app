@@ -7,7 +7,6 @@ from apps.reporters.models import Reporter, PersistantConnection
 import re
 
 
-
 class Question(models.Model):
     text = models.TextField()
     
@@ -15,7 +14,6 @@ class Question(models.Model):
         return "Q%s: %s" % (
             self.pk,
             self.text)
-
 
 class Tree(models.Model):
     trigger = models.CharField(max_length=30, help_text="The incoming message which triggers this Tree")
@@ -62,23 +60,30 @@ class Answer(models.Model):
             # this might be ugly
             return self.answer
     
-    
 
 class TreeState(models.Model):
-    #tree = models.ForeignKey(Tree)
+    """ A TreeState is a location in a tree.  It is 
+        associated with a question and a set of answers
+        (transitions) that allow traversal to other states """ 
     name = models.CharField(max_length=100)
     question = models.ForeignKey(Question, blank=True, null=True)
-    
+    # the number of tries they have to get out of this state
+    # if empty there is no limit.  When the num_retries is hit
+    # a user's session will be terminated.
+    num_retries = models.PositiveIntegerField(blank=True,null=True)
+
     def __unicode__(self):
         return ("State %s, Question: %s" % (
             self.name,
             self.question))
     
 class Transition(models.Model):
+    """ A Transition is a way to navigate from one
+        TreeState to another, via an appropriate 
+        Answer. """ 
     current_state = models.ForeignKey(TreeState)
     answer = models.ForeignKey(Answer)
     next_state = models.ForeignKey(TreeState, blank=True, null=True, related_name='next_state')     
-    
     
     def __unicode__(self):
         return ("%s : %s --> %s" % 
@@ -87,11 +92,18 @@ class Transition(models.Model):
              self.next_state))
  
 class Session(models.Model):
-    # We might want to make these reporters
+    """ A Session represents a single person's current 
+        status traversing through a Tree. It is a way
+        to persist information about what state they
+        are in, how many retries they have had, etc. so 
+        that we aren't storing all of that in-memory. """ 
     connection = models.ForeignKey(PersistantConnection)
     tree = models.ForeignKey(Tree)
     start_date = models.DateTimeField(auto_now_add=True)
     state = models.ForeignKey(TreeState, blank=True, null=True) # none if the session is complete
+    # the number of times the user has tried to answer 
+    # this question  
+    num_tries = models.PositiveIntegerField()
      
     def __unicode__(self):
         if self.state:
@@ -101,6 +113,9 @@ class Session(models.Model):
         return ("%s : %s" % (self.connection.identity, text))
 
 class Entry(models.Model):
+    """ An Entry is a single successful movement within
+        a Session.  It represents an accepted Transition 
+        from one state to another within the tree. """ 
     session = models.ForeignKey(Session)
     sequence_id = models.IntegerField()
     transition = models.ForeignKey(Transition)
@@ -124,14 +139,3 @@ class Entry(models.Model):
     
     class Meta:
         verbose_name_plural="Entries"
-
-'''class Message(models.Model):
-    connection = models.CharField(max_length=100, blank=True, null=True)
-    time = models.DateTimeField(auto_now_add=True)
-    text = models.CharField(max_length=160)
-    is_outgoing = models.BooleanField()
-
-    def __unicode__(self):
-        return self.text
-
-'''
