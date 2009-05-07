@@ -11,16 +11,10 @@ class App(rapidsms.app.App):
     
     registered_functions = {}
     
-#    def __init__(self, title, router):
-#        super(App, self).__init__(title, router) 
-#        self.name = "tree"
-#        
-
     def start(self):
-        
         pass
     
-    def configure(self, last_message="There are no more questions.", **kwargs):
+    def configure(self, last_message="You are done with this survey.  Thanks for participating!", **kwargs):
         self.last_message = last_message
     
     def handle(self, msg):
@@ -71,7 +65,7 @@ class App(rapidsms.app.App):
                 # there are no defined answers.  therefore there are no more questions to ask 
                 if len(transitions) == 0:
                     # send back some precanned response
-                    msg.respond("You are done with this survey.  Thanks for participating!")
+                    msg.respond(self.last_message)
                     # remove the connection so the caller can start a new session
                     session.state = None
                     session.save()
