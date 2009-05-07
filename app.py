@@ -156,7 +156,7 @@ class App(rapidsms.app.App):
         if answer.type == "A":
             return answer_value.lower() == answer.answer.lower()
         elif answer.type == "R":
-            return re.match(answer.answer, answer_value)
+            return re.match(answer.answer, answer_value, re.IGNORECASE)
         elif answer.type == "C":
             if self.registered_functions.has_key(answer.answer):
                 return self.registered_functions[answer.answer](message)
