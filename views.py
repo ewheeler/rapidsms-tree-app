@@ -30,8 +30,8 @@ def data(req, id = None):
     # then we'll look at paths, by using the concatenated list of states taken for that path as a key
     if len(allTrees) != 0:
         t = get_tree(id)
-        all_states = get_all_states(t)
-        loops = has_loops(t) 
+        all_states = t.get_all_states()
+        loops = t.has_loops() 
         if not loops:
             # this is the easy case.  just create one column per state and then display the results
             sessions = Session.objects.all().filter(tree=t)
@@ -89,8 +89,8 @@ def data(req, id = None):
 
 def export(req, id = None):
     t = get_tree(id)
-    all_states = get_all_states(t)
-    loops = has_loops(t) 
+    all_states = t.get_all_states()
+    loops = t.has_loops() 
     if not loops:
         output = StringIO()
         w = csv.writer(output)
@@ -119,46 +119,6 @@ def export(req, id = None):
     else:
         return render_to_response(req, "tree/index.html",{})
 
-
-def add_all_unique_children(state, added):
-    ''' Adds all unique children of the state to the passed in list.  This happens
-        recursively.'''
-    transitions = state.transition_set.all()
-    #loops = False
-    for transition in transitions:
-        if transition.next_state:
-            if not added.__contains__(transition.next_state):
-                added.append(transition.next_state)
-                add_all_unique_children(transition.next_state, added)
-            #else:
-                #loops = True
-    #return loops
-                
-                
-def has_loops(tree):
-    return path_has_loops([tree.root_state])
-
-def path_has_loops(path):
-    # we're going to get all unique paths through the tree (or until we hit a loop)
-    # a path is defined as an ordered set of states
-    # if at any point in a path we reach a state we've already seen then we have a loop
-    # this is basically a depth first search
-    last_node = path[len(path) - 1]
-    transitions = last_node.transition_set.all()
-    for transition in transitions:
-      if transition.next_state:
-          # Base case.  We have already seen this state in the path
-          if path.__contains__(transition.next_state):
-              return True
-          next_path = path[:]
-          next_path.append(transition.next_state)
-          # recursive case - there is a loop somewhere below this path
-          if path_has_loops(next_path):
-              return True
-    # we trickle down to here - went all the way through without finding any loops
-    return False
-      
-    
 def get_tree(id):
     '''Gets a tree.  If id is specified it gets the tree with that Id.
        If Id is not specified it gets the latest tree.  If there are 
@@ -170,14 +130,4 @@ def get_tree(id):
             return Tree.objects.all()[len(Tree.objects.all()) - 1]
         else:
             return Tree()  
-    
-def get_all_states(tree):
-    all_states = []
-    all_states.append(tree.root_state)
-    add_all_unique_children(tree.root_state, all_states)
-    return all_states
-        
-    
-    
-    
     

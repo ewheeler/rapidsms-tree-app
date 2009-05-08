@@ -28,6 +28,17 @@ class Tree(models.Model):
             self.trigger,
             self.root_state)
 
+    def has_loops(self):
+        return self.root_state.has_loops_below()
+
+      
+    def get_all_states(self):
+        all_states = []
+        all_states.append(self.root_state)
+        self.root_state.add_all_unique_children(all_states)
+        return all_states
+
+
 
 class Answer(models.Model):
     ANSWER_TYPES = (
@@ -71,6 +82,43 @@ class TreeState(models.Model):
     # if empty there is no limit.  When the num_retries is hit
     # a user's session will be terminated.
     num_retries = models.PositiveIntegerField(blank=True,null=True)
+
+    def has_loops_below(self):
+        return TreeState.path_has_loops([self])
+    
+    @classmethod
+    def path_has_loops(klass, path):
+        # we're going to get all unique paths through the this
+        # (or until we hit a loop)
+        # a path is defined as an ordered set of states
+        # if at any point in a path we reach a state we've 
+        # already seen then we have a loop
+        # this is basically a depth first search
+        last_node = path[len(path) - 1]
+        transitions = last_node.transition_set.all()
+        for transition in transitions:
+          if transition.next_state:
+              # Base case.  We have already seen this state in the path
+              if path.__contains__(transition.next_state):
+                  return True
+              next_path = path[:]
+              next_path.append(transition.next_state)
+              # recursive case - there is a loop somewhere below this path
+              if TreeState.path_has_loops(next_path):
+                  return True
+        # we trickle down to here - went all the way through without finding any loops
+        return False
+        
+    def add_all_unique_children(self, added):
+        ''' Adds all unique children of the state to the passed in list.  
+            This happens recursively.'''
+        transitions = self.transition_set.all()
+        for transition in transitions:
+            if transition.next_state:
+                if transition.next_state not in added:
+                    added.append(transition.next_state)
+                    transition.next_state.add_all_unique_children(added)
+                
 
     def __unicode__(self):
         return ("State %s, Question: %s" % (
