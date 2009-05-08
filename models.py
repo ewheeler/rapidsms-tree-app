@@ -150,8 +150,11 @@ class Session(models.Model):
     start_date = models.DateTimeField(auto_now_add=True)
     state = models.ForeignKey(TreeState, blank=True, null=True) # none if the session is complete
     # the number of times the user has tried to answer 
-    # this question  
+    # this question
     num_tries = models.PositiveIntegerField()
+    # this flag stores the difference between completed
+    # on its own, or manually canceled.
+    canceled = models.BooleanField(blank=True, null=True) 
      
     def __unicode__(self):
         if self.state:

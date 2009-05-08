@@ -138,10 +138,11 @@ class App(rapidsms.app.App):
         # long committed to dealing with this message
         return True
 
-    def _end_session(self, session):
+    def _end_session(self, session, canceled=False):
         '''Ends a session, by setting its state to none,
            and alerting any session listeners'''
         session.state = None
+        session.canceled = canceled
         session.save()
         if self.session_listeners.has_key(session.tree.trigger):
             for func in self.session_listeners[session.tree.trigger]:
@@ -152,7 +153,7 @@ class App(rapidsms.app.App):
             does nothing if there are no open sessions ''' 
         sessions = Session.objects.filter(connection=connection).exclude(state=None)
         for session in sessions:
-            self._end_session(session)
+            self._end_session(session, True)
             
     def register_custom_transition(self, name, function):
         ''' Registers a handler for custom logic within a 
