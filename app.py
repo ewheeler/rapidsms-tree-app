@@ -161,18 +161,24 @@ class App(rapidsms.app.App):
         self.info("Registering keyword: %s for function %s" %(name, function.func_name))
         self.registered_functions[name] = function  
         
-    def add_session_listener(self, tree_key, function):
+    def set_session_listener(self, tree_key, function):
         '''Adds a session listener to this.  These functions
            get called at the beginning and end of every session.
            The contract of the function is func(Session, is_ending)
            where is_ending = false at the start and true at the
-           end of the session 
+           end of the session.
         ''' 
+        
         self.info("Registering session listener %s for tree %s" %(function.func_name, tree_key))
-        if self.session_listeners.has_key(tree_key):
-            self.session_listners[tree_key].append(function)
-        else: 
-            self.session_listeners[tree_key] = [function]
+        # I can't figure out how to deal with duplicates, so only allowing
+        # a single registered function at a time.
+#        
+#        if self.session_listeners.has_key(tree_key):
+#            # have to check existence.  This is mainly for the unit tests
+#            if function not in self.session_listeners[tree_key]:
+#                self.session_listeners[tree_key].append(function)
+#        else: 
+        self.session_listeners[tree_key] = [function]
         
     def matches(self, answer, message):
         answer_value = message.text
