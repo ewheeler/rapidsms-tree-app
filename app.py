@@ -79,9 +79,14 @@ class App(rapidsms.app.App):
                     return
                 else:
                     # send them some hints about how to respond
-                    flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
-                    self.debug("flat answers")
-                    msg.respond('"%s" is not a valid answer. You must enter %s' % (msg.text, flat_answers))
+                    if state.question.error_response:
+                        response = (_(state.question.error_response, get_language_code(session.connection)))
+                        if "%(answer)s" in response:
+                            response = response % ({"answer" : msg.text})
+                    else:
+                        flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
+                        response = _('"%s" is not a valid answer. You must enter %s' % (msg.text, flat_answers), get_language_code(session.connection))
+                    msg.respond(response)
                     
                     # update the number of times the user has tried
                     # to answer this.  If they have reached the 
