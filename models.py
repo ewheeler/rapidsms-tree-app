@@ -9,6 +9,9 @@ import re
 
 class Question(models.Model):
     text = models.TextField()
+    # allow the question to specify a default error
+    # message
+    error_response = models.TextField(null=True, blank=True)
     
     def __unicode__(self):
         return "Q%s: %s" % (

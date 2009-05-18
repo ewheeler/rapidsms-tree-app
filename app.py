@@ -5,7 +5,7 @@ import rapidsms
 from models import *
 from apps.reporters.models import Reporter
 from apps.i18n.utils import get_translation as _
-from apps.i18n.utils import get_language 
+from apps.i18n.utils import get_language_code 
 
 class App(rapidsms.app.App):
     
@@ -91,7 +91,7 @@ class App(rapidsms.app.App):
                     if state.num_retries and session.num_tries >= state.num_retries:
                         session.state = None
                         msg.respond(_("Sorry, invalid answer %(retries)s times. Your session will now end. Please try again later.",
-                                      get_language(session.connection)) % {"retries": session.num_tries })
+                                      get_language_code(session.connection)) % {"retries": session.num_tries })
                         
                     session.save()
                     return True
@@ -123,7 +123,7 @@ class App(rapidsms.app.App):
             if not session.state:
                 self._end_session(session)
                 if session.tree.completion_text:
-                    msg.respond(_(session.tree.completion_text, get_language(session.connection)))
+                    msg.respond(_(session.tree.completion_text, get_language_code(session.connection)))
                 
         # if there is a next question ready to ask
         # (and this includes THE FIRST), send it along
@@ -131,8 +131,8 @@ class App(rapidsms.app.App):
         if sessions:
             state = sessions[0].state
             if state.question:
-                msg.respond(_(state.question.text, get_language(sessions[0].connection)))
-                self.info(_(state.question.text, get_language(sessions[0].connection)))
+                msg.respond(_(state.question.text, get_language_code(sessions[0].connection)))
+                self.info(_(state.question.text, get_language_code(sessions[0].connection)))
         
         # if we haven't returned long before now, we're
         # long committed to dealing with this message
