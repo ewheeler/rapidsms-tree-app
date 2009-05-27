@@ -85,7 +85,10 @@ class App(rapidsms.app.App):
                             response = response % ({"answer" : msg.text})
                     else:
                         flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
-                        response = _('"%s" is not a valid answer. You must enter %s' % (msg.text, flat_answers), get_language_code(session.connection))
+                        translated_answers = _(flat_answers, get_language_code(session.connection))
+                        response = _('"%(answer)s" is not a valid answer. You must enter %(hint)s', 
+                                     get_language_code(session.connection))% ({"answer" : msg.text, "hint": translated_answers})
+                         
                     msg.respond(response)
                     
                     # update the number of times the user has tried
