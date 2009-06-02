@@ -64,19 +64,15 @@ def data(req, id = None):
                         paths[path][session] = entry.transition.answer
                     else:
                         paths[path] = { session : entry.transition.answer }
-            print paths
             return render_to_response(req, "tree/data.html",
                                       { "trees": allTrees, "t": t, "paths" : paths, "sessions" : sessions, "loops" : loops }
                                       )
-        print all_states
         # now we need to map all states to answers
         states_w_answers = {}
         for state in all_states:
             states_w_answers[state] = map((lambda x: x.answer), state.transition_set.all()) 
-        print states_w_answers
         # now we need to get all the entries
         all_entries = Entry.objects.all().filter(session__tree = t)
-        print all_entries
         if loops:
             # stupid error fix to prevent trees with loops from exploding.  This should be done better
             t = Tree()
