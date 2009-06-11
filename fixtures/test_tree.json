@@ -1,31 +1,55 @@
 [
+ {
+    "pk": 1, 
+    "model": "patterns.pattern", 
+    "fields": {
+      "regex": "(en[a-z]*)", 
+      "name": "english"
+    }
+  }, 
+  {
+    "pk": 2, 
+    "model": "patterns.pattern", 
+    "fields": {
+      "regex": "(sp[a-z]*)", 
+      "name": "spanish"
+    }
+  }, 
+  {
+    "pk": 3, 
+    "model": "patterns.pattern", 
+    "fields": {
+      "regex": "(fr[a-z]*)", 
+      "name": "french"
+    }
+  }, 
   {
     "pk": 1, 
-    "model": "tree.language", 
+    "model": "i18n.language", 
     "fields": {
-      "code": "en", 
+      "pattern": 1,
       "name": "English"
     }
   }, 
   {
     "pk": 2, 
-    "model": "tree.language", 
+    "model": "i18n.language", 
     "fields": {
-      "code": "sp", 
+      "pattern": 2, 
       "name": "Spanish"
     }
   }, 
   {
     "pk": 3, 
-    "model": "tree.language", 
+    "model": "i18n.language", 
     "fields": {
-      "code": "fr", 
+      "pattern": 3, 
       "name": "French"
     }
   }, 
   {
     "pk": 1, 
-    "model": "tree.translation", 
+    "model": "i18n.translation", 
     "fields": {
       "translation": "ola", 
       "original": "hello", 
@@ -34,7 +58,7 @@
   }, 
   {
     "pk": 2, 
-    "model": "tree.translation", 
+    "model": "i18n.translation", 
     "fields": {
       "translation": "bon jour", 
       "original": "hello", 
