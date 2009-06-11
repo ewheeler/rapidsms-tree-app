@@ -78,9 +78,14 @@ class App(rapidsms.app.App):
                             response = response % ({"answer" : msg.text})
                     else:
                         flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
-                        translated_answers = _(flat_answers, get_language_code(session.connection))
-                        response = _('"%(answer)s" is not a valid answer. You must enter %(hint)s', 
-                                     get_language_code(session.connection))% ({"answer" : msg.text, "hint": translated_answers})
+                        # Make translation happen all at the end.  This is currently more practical
+                        #translated_answers = _(flat_answers, get_language_code(session.connection))
+                        #response = _('"%(answer)s" is not a valid answer. You must enter %(hint)s', 
+                        #             get_language_code(session.connection))% ({"answer" : msg.text, "hint": translated_answers})
+                        untranslated_response ='"%(answer)s" is not a valid answer. You must enter ' + flat_answers
+                        response = _(untranslated_response,
+                                     get_language_code(session.connection))% ({"answer" : msg.text})
+                        
                          
                     msg.respond(response)
                     
