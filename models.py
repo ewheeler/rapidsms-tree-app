@@ -41,6 +41,11 @@ class Tree(models.Model):
         self.root_state.add_all_unique_children(all_states)
         return all_states
 
+    class Meta:
+        # the permission required for this tab to display in the UI
+        permissions = (
+            ("can_view", "Can view tree data"),
+        )
 
 
 class Answer(models.Model):
