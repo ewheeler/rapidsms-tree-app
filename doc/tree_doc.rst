@@ -1,6 +1,6 @@
-=====
+==================
 Using the Tree App
-=====
+==================
 
 The tree app allows you to define decision trees that can perform a question-and-answer type interaction with a user.  A tree consists of one or more states each of which is associated with a question and zero or more answers to that question that can transition to other states. As questions are answered the user traverses the tree based on the answers until he or she reaches a state that has no more transitions.  At this point the user has completed the session.  The tree saves every question/answer pairing in a single table, and provides functionality for applications to initiate a callback when trees are initiated and completed so that application developers can write their own processing of the tree data.  A visualization of a tree is below.
 
