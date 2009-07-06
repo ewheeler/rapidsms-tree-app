@@ -8,6 +8,9 @@ import re
 
 
 class Question(models.Model):
+    '''A question, which is just some text to be sent to the user,
+       and an optional error message if the question is not answered
+       properly'''
     text = models.TextField()
     # allow the question to specify a default error
     # message
@@ -19,6 +22,20 @@ class Question(models.Model):
             self.text)
 
 class Tree(models.Model):
+    '''A decision tree.  
+    
+       Trees have a trigger, which is is the incoming
+       message that will initiate a tree.  They also have a root state
+       which is the first state the tree will be in.  The question linked
+       to the root state will be the one that is sent when the tree is
+       initiated.  The remaining logic of the tree is encapsulated by
+       the Transition objects, which define how answers to questions
+       move from one state to the next.
+       
+       A tree also has optional completion text, which is the message
+       that will be sent to the user when they reach a node in the 
+       tree with no possible transitions.
+       '''
     trigger = models.CharField(max_length=30, help_text="The incoming message which triggers this Tree")
     #root_question = models.ForeignKey("Question", related_name="tree_set", help_text="The first Question sent when this Tree is triggered, which may lead to many more")
     # making this compatible with the UI
@@ -49,6 +66,32 @@ class Tree(models.Model):
 
 
 class Answer(models.Model):
+    '''An answer to a question.
+       
+       There are three possible types of answers:
+       
+       The simplest is an exact answer. Messages 
+       will only match this answer if the text is
+       exactly the same as the answer specified.  
+       
+       The second is a regular expression.  In this
+       case the system will run a regular expression
+       over the message and match the answer if the
+       regular expression matches.
+       
+       The final type is custom logic.  In this case
+       the answer should be a special keyword that 
+       the application developer defines. The 
+       application developer can then register a 
+       function tied to this keyword with the tree 
+       app and the tree app will call that function to
+       see if the answer should match. The function
+       should return any value that maps to True if 
+       the answer is valid, otherwise any value that
+       maps to False.
+    '''
+       
+       
     ANSWER_TYPES = (
         ('A', 'Answer (exact)'),
         ('R', 'Regular Expression'),
@@ -83,7 +126,7 @@ class Answer(models.Model):
 class TreeState(models.Model):
     """ A TreeState is a location in a tree.  It is 
         associated with a question and a set of answers
-        (transitions) that allow traversal to other states """ 
+        (transitions) that allow traversal to other states.""" 
     name = models.CharField(max_length=100)
     question = models.ForeignKey(Question, blank=True, null=True)
     # the number of tries they have to get out of this state
