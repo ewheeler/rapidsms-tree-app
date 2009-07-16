@@ -3,9 +3,9 @@
 
 import rapidsms
 from models import *
-from apps.reporters.models import Reporter
-from apps.i18n.utils import get_translation as _
-from apps.i18n.utils import get_language_code 
+from reporters.models import Reporter
+from i18n.utils import get_translation as _
+from i18n.utils import get_language_code 
 
 class App(rapidsms.app.App):
     

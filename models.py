@@ -3,7 +3,7 @@
 
 
 from django.db import models
-from apps.reporters.models import Reporter, PersistantConnection
+from reporters.models import Reporter, PersistantConnection
 import re
 
 
