@@ -2,6 +2,8 @@
 # vim: ai ts=4 sts=4 et sw=4
 
 import rapidsms
+from rapidsms.connection import Connection 
+from rapidsms.message import Message
 from models import *
 from reporters.models import Reporter
 from i18n.utils import get_translation as _
@@ -28,17 +30,8 @@ class App(rapidsms.app.App):
             try:
                 tree = Tree.objects.get(trigger=msg.text)
                 # start a new session for this person and save it
-                session = Session(connection=msg.persistant_connection, 
-                                  tree=tree, state=tree.root_state, num_tries=0)
-                session.save()
-                self.debug("session %s saved" % session)
-                
-                # also notify any session listeners of this
-                # so they can do their thing
-                if self.session_listeners.has_key(tree.trigger):
-                    for func in self.session_listeners[tree.trigger]:
-                        func(session, False)
-            
+                self.start_tree(tree, msg.persistant_connection, msg)
+                return True
             # no trigger found? no big deal. the
             # message is probably for another app
             except Tree.DoesNotExist:
@@ -85,9 +78,14 @@ class App(rapidsms.app.App):
                             response = response % ({"answer" : msg.text})
                     else:
                         flat_answers = " or ".join([trans.answer.helper_text() for trans in transitions])
-                        translated_answers = _(flat_answers, get_language_code(session.connection))
-                        response = _('"%(answer)s" is not a valid answer. You must enter %(hint)s', 
-                                     get_language_code(session.connection))% ({"answer" : msg.text, "hint": translated_answers})
+                        # Make translation happen all at the end.  This is currently more practical
+                        #translated_answers = _(flat_answers, get_language_code(session.connection))
+                        #response = _('"%(answer)s" is not a valid answer. You must enter %(hint)s', 
+                        #             get_language_code(session.connection))% ({"answer" : msg.text, "hint": translated_answers})
+                        untranslated_response ='"%(answer)s" is not a valid answer. You must enter ' + flat_answers
+                        response = _(untranslated_response,
+                                     get_language_code(session.connection))% ({"answer" : msg.text})
+                        
                          
                     msg.respond(response)
                     
@@ -133,18 +131,48 @@ class App(rapidsms.app.App):
                 if session.tree.completion_text:
                     msg.respond(_(session.tree.completion_text, get_language_code(session.connection)))
                 
-        # if there is a next question ready to ask
-        # (and this includes THE FIRST), send it along
-        sessions = Session.objects.all().filter(state__isnull=False).filter(connection=msg.persistant_connection)
-        if sessions:
-            state = sessions[0].state
-            if state.question:
-                msg.respond(_(state.question.text, get_language_code(sessions[0].connection)))
-                self.info(_(state.question.text, get_language_code(sessions[0].connection)))
+            # if there is a next question ready to ask
+            # send it along
+            self._send_question(session, msg)
+            # if we haven't returned long before now, we're
+            # long committed to dealing with this message
+            return True
+    
+    def start_tree(self, tree, connection, msg=None):
+        '''Initiates a new tree sequence, terminating any active sessions'''
+        self.end_sessions(connection)
+        session = Session(connection=connection, 
+                          tree=tree, state=tree.root_state, num_tries=0)
+        session.save()
+        self.debug("new session %s saved" % session)
         
-        # if we haven't returned long before now, we're
-        # long committed to dealing with this message
-        return True
+        # also notify any session listeners of this
+        # so they can do their thing
+        if self.session_listeners.has_key(tree.trigger):
+            for func in self.session_listeners[tree.trigger]:
+                func(session, False)
+        self._send_question(session, msg)
+    
+    def _send_question(self, session, msg=None):
+        '''Sends the next question in the session, if there is one''' 
+        state = session.state
+        if state and state.question:
+            response = _(state.question.text, get_language_code(session.connection))
+            self.info("Sending: %s" % response)
+            if msg:
+                msg.respond(response)
+            else:
+                # we need to get the real backend from the router 
+                # to properly send it 
+                real_backend = self.router.get_backend(session.connection.backend.slug)
+                if real_backend:
+                    connection = Connection(real_backend, session.connection.identity)
+                    outgoing_msg = Message(connection, response)
+                    self.router.outgoing(outgoing_msg)
+                else: 
+                    # todo: do we want to fail more loudly than this?
+                    error = "Can't find backend %s.  Messages will not be sent" % connection.backend.slug
+                    self.error(error)
 
     def _end_session(self, session, canceled=False):
         '''Ends a session, by setting its state to none,
@@ -180,12 +208,12 @@ class App(rapidsms.app.App):
         self.info("Registering session listener %s for tree %s" %(function.func_name, tree_key))
         # I can't figure out how to deal with duplicates, so only allowing
         # a single registered function at a time.
-#        
-#        if self.session_listeners.has_key(tree_key):
-#            # have to check existence.  This is mainly for the unit tests
-#            if function not in self.session_listeners[tree_key]:
-#                self.session_listeners[tree_key].append(function)
-#        else: 
+        #        
+        #        if self.session_listeners.has_key(tree_key):
+        #            # have to check existence.  This is mainly for the unit tests
+        #            if function not in self.session_listeners[tree_key]:
+        #                self.session_listeners[tree_key].append(function)
+        #        else: 
         self.session_listeners[tree_key] = [function]
         
     def matches(self, answer, message):
