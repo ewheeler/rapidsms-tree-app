@@ -3,7 +3,7 @@
 
 import os
 from django.conf.urls.defaults import *
-import apps.tree.views as views
+import tree.views as views
 
 urlpatterns = patterns('',
     (r'^tree$', views.index),
