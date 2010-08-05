@@ -2,10 +2,10 @@
 # vim: ai ts=4 sts=4 et sw=4
 
 import rapidsms
-from rapidsms.connection import Connection 
+from rapidsms.models import Connection
 from rapidsms.message import Message
 from models import *
-from reporters.models import Reporter
+from rapidsms.models import Contact
 from i18n.utils import get_translation as _
 from i18n.utils import get_language_code 
 
