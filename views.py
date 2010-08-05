@@ -4,7 +4,7 @@
 
 from django.http import HttpResponse
 from django.template import RequestContext
-from rapidsms.webui.utils import render_to_response
+from django.db import render_to_response
 from django.contrib.auth.decorators import login_required, permission_required
 
 from tree.models import *
@@ -19,10 +19,12 @@ def index(req):
     allTrees = Tree.objects.all()
     if len(allTrees) != 0:
 		t = allTrees[len(allTrees) - 1]
-		return render_to_response(req, "tree/index.html",
-		    { "trees": allTrees, "t": t })
+		return render_to_response("tree/index.html",
+		    { "trees": allTrees, "t": t }, 
+                    context_instance=RequestContext(req))
     else:
-		return render_to_response(req, "tree/index.html", {})
+		return render_to_response("tree/index.html", {},
+                    context_instance=RequestContext(req))
 
 
 @login_required
@@ -40,9 +42,9 @@ def data(req, id = None):
         if not loops:
             # this is the easy case.  just create one column per state and then display the results
             sessions = Session.objects.all().filter(tree=t)
-            return render_to_response(req, "tree/data.html",
-                                      { "trees": allTrees, "t": t, "states" : all_states, "sessions" : sessions, "loops" : loops}
-                                      )
+            return render_to_response("tree/data.html",
+                                      { "trees": allTrees, "t": t, "states" : all_states, "sessions" : sessions, "loops" : loops},
+                                      context_instance=RequestContext(req))
         else: 
             # here what we want is a table where the columns are every unique path through the 
             # tree, and the rows are the sessions, with the paths filled in.
@@ -69,9 +71,9 @@ def data(req, id = None):
                         paths[path][session] = entry.transition.answer
                     else:
                         paths[path] = { session : entry.transition.answer }
-            return render_to_response(req, "tree/data.html",
-                                      { "trees": allTrees, "t": t, "paths" : paths, "sessions" : sessions, "loops" : loops }
-                                      )
+            return render_to_response("tree/data.html",
+                                      { "trees": allTrees, "t": t, "paths" : paths, "sessions" : sessions, "loops" : loops },
+                                      context_instance=RequestContext(req))
         # now we need to map all states to answers
         states_w_answers = {}
         for state in all_states:
@@ -82,8 +84,9 @@ def data(req, id = None):
             # stupid error fix to prevent trees with loops from exploding.  This should be done better
             t = Tree()
             t.trigger = "Sorry, can't display this tree because it has loops.  We're working on it."
-        return render_to_response(req, "tree/index.html",
-            { "trees": allTrees, "t": t })
+        return render_to_response("tree/index.html",
+            { "trees": allTrees, "t": t },
+            context_instance=RequestContext(req))
     else:
         return render_to_response("tree/index.html",
             context_instance=RequestContext(req))
@@ -120,7 +123,7 @@ def export(req, id = None):
         response["content-disposition"] = "attachment; filename=%s.csv" % t.trigger
         return response
     else:
-        return render_to_response(req, "tree/index.html",{})
+        return render_to_response("tree/index.html",{}, context_instance=RequestContext(req))
 
 def get_tree(id):
     '''Gets a tree.  If id is specified it gets the tree with that Id.
