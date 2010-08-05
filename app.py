@@ -2,20 +2,29 @@
 # vim: ai ts=4 sts=4 et sw=4
 
 import rapidsms
+from rapidsms.apps.base import AppBase
 from rapidsms.models import Connection
-from rapidsms.message import Message
+from rapidsms.messages import OutgoingMessage
 from models import *
 from rapidsms.models import Contact
-from i18n.utils import get_translation as _
-from i18n.utils import get_language_code 
 
-class App(rapidsms.app.App):
+#TODO this is mad hackery to make sure porting is complete
+#from i18n.utils import get_translation as _
+#from i18n.utils import get_language_code
+def _(self, text, lang=None):
+    if text is not None:
+        return text
+
+#TODO this is mad hackery to make sure porting is complete
+def get_language_code(self, lang):
+    pass
     
+class App(AppBase):
     registered_functions = {}
     session_listeners = {}
     
     def start(self):
-        pass
+        self.configure()
     
     def configure(self, last_message="You are done with this survey.  Thanks for participating!", **kwargs):
         self.last_message = last_message
@@ -25,12 +34,12 @@ class App(rapidsms.app.App):
         # they're not currently answering a question tree, so
         # just search for triggers and return
         sessions = Session.objects.all().filter(state__isnull=False)\
-            .filter(connection=msg.persistant_connection)
+            .filter(connection=msg.connection)
         if not sessions:
             try:
                 tree = Tree.objects.get(trigger=msg.text)
                 # start a new session for this person and save it
-                self.start_tree(tree, msg.persistant_connection, msg)
+                self.start_tree(tree, msg.connection, msg)
                 return True
             # no trigger found? no big deal. the
             # message is probably for another app
@@ -167,8 +176,8 @@ class App(rapidsms.app.App):
                 real_backend = self.router.get_backend(session.connection.backend.slug)
                 if real_backend:
                     connection = Connection(real_backend, session.connection.identity)
-                    outgoing_msg = Message(connection, response)
-                    self.router.outgoing(outgoing_msg)
+                    outgoing_msg = OutgoingMessage(connection, response)
+                    outgoing_msg.send()
                 else: 
                     # todo: do we want to fail more loudly than this?
                     error = "Can't find backend %s.  Messages will not be sent" % connection.backend.slug
