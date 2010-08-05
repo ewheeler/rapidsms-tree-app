@@ -3,7 +3,7 @@
 
 
 from django.db import models
-from reporters.models import Reporter, PersistantConnection
+from rapidsms.models import Connection
 import re
 
 
@@ -196,7 +196,7 @@ class Session(models.Model):
         to persist information about what state they
         are in, how many retries they have had, etc. so 
         that we aren't storing all of that in-memory. """ 
-    connection = models.ForeignKey(PersistantConnection)
+    connection = models.ForeignKey(Connection)
     tree = models.ForeignKey(Tree)
     start_date = models.DateTimeField(auto_now_add=True)
     state = models.ForeignKey(TreeState, blank=True, null=True) # none if the session is complete
